@@ -38,4 +38,4 @@ if __name__ == "__main__":
 
     plt.legend(loc='best')
     plt.savefig("test.svg")
-    plt.show()
+    # plt.show()
