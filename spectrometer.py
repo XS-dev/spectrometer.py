@@ -2,8 +2,10 @@ import glob
 
 import numpy as np
 import pandas as pd
-
+import osqp
+from scipy import sparse
 import u_tool
+import scipy as sp
 
 
 class Spectrometer:
@@ -14,25 +16,40 @@ class Spectrometer:
 
     def _get_matrix_a(self, filepath):
         self.matrix_a = self.__get_spectral_intensity(filepath)
-        self.matrix_a = self.__absorption2transmittance(self.matrix_a)
+        # self.matrix_a = self.__absorption2transmittance(self.matrix_a)
         return self.matrix_a
 
-    def _get_matrix_x(self, filepath):
-        self.matrix_x = pd.DataFrame(pd.read_table(filepath, sep=',', encoding='gbk', header=1)).values[:, 1]
-        self.matrix_x = self.matrix_x[np.newaxis, :]
+    def _get_matrix_x(self, filepath,method,name):
+        if method == 0:
+            self.matrix_x = pd.DataFrame(pd.read_table(filepath, sep=',', encoding='utf-8', header=1)).values[:, 0]
+            self.matrix_x = self.matrix_x[np.newaxis, :]
+        else:
+            self.matrix_x = np.load(name)
+            self.matrix_x = self.matrix_x[np.newaxis, :]
         return self.matrix_x
 
-    def _get_matrix_b(self):
-        self.matrix_b = self.matrix_a.dot(self.matrix_x.T)
-        return self.matrix_b
+    def _get_matrix_b(self,filepath,method,order):
+        if method == 1:
+            self.matrix_b = self.matrix_a.dot(self.matrix_x.T)
+            return self.matrix_b
+        else:
+            self.matrix_b = self.__get_spectral_intensity(filepath)
+            [btempm,btempn] = self.matrix_b.shape
+            btemphere = self.matrix_b[:, 0]
+            for btemporderx in range(0,btempm):
+                self.matrix_b[btemporderx,1:btempn+1] = self.matrix_b[btemporderx,1:btempn+1]/(btemphere[btemporderx]**2)
+            self.matrix_b = self.matrix_b[:,order]
+
+            return self.matrix_b
 
     def __get_spectral_intensity(self, filepath):
         filepath = glob.glob(filepath)
         f_length = len(filepath)
-        df = pd.DataFrame(pd.read_table(filepath[f_length - 1], sep=',', encoding='gbk', header=1)).values[:, 1]
+        dftemp = pd.DataFrame(pd.read_table(filepath[f_length - 1], sep=',', encoding='utf-8', header=1))
+        df = dftemp.values[:, 0]
         for tmp in range(f_length - 2, -1, -1):
             df = np.vstack(
-                (pd.DataFrame(pd.read_table(filepath[tmp], sep=',', encoding='gbk', header=1)).values[:, 1], df))
+                (pd.DataFrame(pd.read_table(filepath[tmp], sep=',', encoding='utf-8', header=1)).values[:, 0], df))
         self.matrix = df
         return df
 
@@ -51,11 +68,29 @@ class Spectrometer:
     def __simple_LS(self):
         # 定义二次规划函数所需参数
         # H = 2A'A
-        # H = 2 * self.matrix_a.T.dot(self.matrix_a)
+        H = 2 * self.matrix_a.T.dot(self.matrix_a)
         # f=-2A'b
-        # f = -2. * self.matrix_a.T.dot(self.matrix_b)
+        f = -2. * self.matrix_a.T.dot(self.matrix_b)
         # 不等式约束条件：Ax <= b
         #  等式约束条件：A_eqx=beq
+
+
+        # Define problem data
+        P = sparse.csc_matrix(H)
+        q = np.array(f)
+        A = sparse.csc_matrix(self.matrix_a)
+        l = np.array(self.matrix_b)
+        u = np.array(self.matrix_b)
+
+        # Create an OSQP object
+        prob = osqp.OSQP()
+
+        # Setup workspace and change alpha parameter
+        prob.setup(P, q, A, l, u, alpha=1.0)
+
+        # Solve problem
+        self.xil = prob.solve().x
+
         # 二次规划函数
 
         print('LS')
@@ -98,6 +133,7 @@ class Spectrometer:
                 print(times)
                 print("\r\n")
                 self.xil = x
+                # self.xil = np.linalg.pinv(self.matrix_a).dot(self.matrix_b)
                 self.matrix_x = np.vstack((self.matrix_x,x.T))
                 return x
             else:

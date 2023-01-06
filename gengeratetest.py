@@ -1,0 +1,24 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+x = np.linspace(400,520,121)#设置画图范围
+
+quantity1 = 2
+quantity2 = 2
+
+sigma1 = 6  #方差设置为2
+u1 = 440 #均值设置为1
+y1 = (1 / (math.sqrt(2*math.pi) /sigma1)) * np.exp(-(x - u1) ** 2 / (2 * (sigma1 ** 2)))
+
+
+sigma2 = 6  #方差设置为2
+u2 = 460 #均值设置为1
+y2 = (1 / (math.sqrt(2*math.pi) /sigma2)) * np.exp(-(x - u2) ** 2 / (2 * (sigma2 ** 2)))
+
+y = quantity1* y1+quantity2*y2
+
+plt.figure()
+plt.plot(x,y)
+plt.show()
+
+np.save('test1',y)
