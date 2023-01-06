@@ -18,7 +18,7 @@ if __name__ == "__main__":
     u_matrix._get_matrix_x(filePath)
     u_matrix._get_matrix_b()
 
-    u_matrix._restoration("ALM")
+    u_matrix._restoration("LS")
 
     # 绘制图像
     fig = plt.figure(figsize=(12, 6), dpi=200)
@@ -26,16 +26,16 @@ if __name__ == "__main__":
     ax = fig.add_subplot(121)
     plt_type = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
     for plt_tmp in range(0, 27):
-        plt.scatter(wavelength, u_matrix.matrix_a[plt_tmp, :], marker='v', s=4)
+        plt.plot(wavelength, u_matrix.matrix_a[plt_tmp, :])
 
     ax = fig.add_subplot(122)
-    for plt_tmp in range(0, 2):
+    for plt_tmp in range(0, 1):
         plt.scatter(wavelength, u_matrix.matrix_x[plt_tmp, :], marker=plt_type[plt_tmp], label=u_matrix.alm[plt_tmp], s=4)
-
+    plt.plot(wavelength,u_matrix.xil,label = "qsop",c = 'red')
     plt.xlabel("wavelength/nm", fontdict={'size': 12})
     plt.ylabel("Transmittance", fontdict={'size': 12})
     plt.title("Comparison", fontdict={'size': 15})
 
     plt.legend(loc='best')
-    plt.savefig("test.svg")
+    plt.savefig("best_ever.svg")
     plt.show()

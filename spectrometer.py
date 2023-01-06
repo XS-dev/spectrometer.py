@@ -2,8 +2,10 @@ import glob
 
 import numpy as np
 import pandas as pd
-
+import osqp
+from scipy import sparse
 import u_tool
+import scipy as sp
 
 
 class Spectrometer:
@@ -51,11 +53,29 @@ class Spectrometer:
     def __simple_LS(self):
         # 定义二次规划函数所需参数
         # H = 2A'A
-        # H = 2 * self.matrix_a.T.dot(self.matrix_a)
+        H = 2 * self.matrix_a.T.dot(self.matrix_a)
         # f=-2A'b
-        # f = -2. * self.matrix_a.T.dot(self.matrix_b)
+        f = -2. * self.matrix_a.T.dot(self.matrix_b)
         # 不等式约束条件：Ax <= b
         #  等式约束条件：A_eqx=beq
+
+
+        # Define problem data
+        P = sparse.csc_matrix(H)
+        q = np.array(f)
+        A = sparse.csc_matrix(self.matrix_a)
+        l = np.array(self.matrix_b)
+        u = np.array(self.matrix_b)
+
+        # Create an OSQP object
+        prob = osqp.OSQP()
+
+        # Setup workspace and change alpha parameter
+        prob.setup(P, q, A, l, u, alpha=1.0)
+
+        # Solve problem
+        self.xil = prob.solve().x
+
         # 二次规划函数
 
         print('LS')
@@ -98,6 +118,7 @@ class Spectrometer:
                 print(times)
                 print("\r\n")
                 self.xil = x
+                # self.xil = np.linalg.pinv(self.matrix_a).dot(self.matrix_b)
                 self.matrix_x = np.vstack((self.matrix_x,x.T))
                 return x
             else:
