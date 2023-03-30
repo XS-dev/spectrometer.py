@@ -11,11 +11,11 @@ if __name__ == "__main__":
     # 定义原始数据文件路径
     Xpath = './Adata/533_2349.txt'
 
-
+    TestBpath = './testb.txt'
     bPath = './Bdata/*.txt'
     # 定义波长范围
     # wavelength = np.arange(400, 521, 3)
-    wavelength = np.arange(450, 500, 1)
+    wavelength = np.arange(430,480, 1)
 
     # 实例化类
     u_matrix = spec.Spectrometer(wavelength)
@@ -23,8 +23,10 @@ if __name__ == "__main__":
     dotnums = 16
     # 获得Ax=b中的各个矩阵
     u_matrix._get_matrix_a(Apath,0)
-    u_matrix._get_matrix_x(Xpath,1,'test1.npy')
-    u_matrix._get_matrix_b(bPath,1,75)
+    u_matrix._get_matrix_x(Xpath,1,'test0.npy')
+
+    yaohua = 2
+    u_matrix._get_matrix_b(bPath,yaohua,55,TestBpath)
 
     u_matrix._restoration("LS")
 
@@ -37,8 +39,9 @@ if __name__ == "__main__":
         plt.plot(wavelength, u_matrix.matrix_a[plt_tmp, :])
 
     ax = fig.add_subplot(122)
-    # for plt_tmp in range(0, 1):
-    #     plt.scatter(wavelength, u_matrix.matrix_x[plt_tmp, :], marker=plt_type[plt_tmp], label=u_matrix.alm[plt_tmp], s=4)
+    if yaohua == 1:
+        for plt_tmp in range(0, 1):
+            plt.scatter(wavelength, u_matrix.matrix_x[plt_tmp, :], marker=plt_type[plt_tmp], label=u_matrix.alm[plt_tmp], s=4)
     plt.plot(wavelength,u_matrix.xil,label = "qsop",c = 'red')
     plt.xlabel("wavelength/nm", fontdict={'size': 12})
     plt.ylabel("Transmittance", fontdict={'size': 12})

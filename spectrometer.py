@@ -23,7 +23,7 @@ class Spectrometer:
             # self.matrix_a = self.__absorption2transmittance(self.matrix_a)
             self.matrix_a = matrixatemp.T
         else:
-            self.matrix_a = self.matrix_a[:,50:100]
+            self.matrix_a = self.matrix_a[:,31:81]
         return self.matrix_a
 
     def _get_matrix_x(self, filepath,method,name):
@@ -35,18 +35,23 @@ class Spectrometer:
             self.matrix_x = self.matrix_x[np.newaxis, :]
         return self.matrix_x
 
-    def _get_matrix_b(self,filepath,method,order):
+    def _get_matrix_b(self,filepath,method,order,datapath):
         if method == 1:
-            self.matrix_b = self.matrix_a.dot(self.matrix_x.T)
+            self.matrix_b = self.matrix_a.dot(self.matrix_x.T)*0.8
+            # self.matrix_b = self.matrix_b[np.newaxis, :]
             return self.matrix_b
+        elif method == 2:
+            # self.matrix_b = np.load(datapath)
+            mmm = pd.read_table(datapath, sep=',', encoding='utf-8', header=1)
+            self.matrix_b = pd.DataFrame(mmm).values
         else:
             self.matrix_b = self.__get_spectral_intensity(filepath)
             [btempm,btempn] = self.matrix_b.shape
             btemphere = self.matrix_b[:, 0]
             for btemporderx in range(0,btempm):
                 self.matrix_b[btemporderx,1:btempn+1] = self.matrix_b[btemporderx,1:btempn+1]/(btemphere[btemporderx]**2)
-            self.matrix_b = self.matrix_b[:,order]
-
+            self.matrix_b = self.matrix_b[:,order]*0.65
+            # self.matrix_b = self.matrix_b[np.newaxis, :]
             return self.matrix_b
 
     def __get_spectral_intensity(self, filepath):
@@ -93,7 +98,7 @@ class Spectrometer:
         prob = osqp.OSQP()
 
         # Setup workspace and change alpha parameter
-        prob.setup(P, q, A, l, u, alpha=1.0)
+        prob.setup(P, q, A, l, u, alpha=1.4,eps_prim_inf=1e-6)
 
         # Solve problem
         self.xil = prob.solve().x
@@ -135,7 +140,7 @@ class Spectrometer:
             x = np.linalg.inv(x1).dot(x2)
             j1 = np.linalg.norm(G.dot(x) - g)
             j2 = np.linalg.norm(A.dot(x)-b)
-            if ( j1 + j2) < epsilon:
+            if (j1 + j2) < epsilon:
                 print("迭代次数")
                 print(times)
                 print("\r\n")
