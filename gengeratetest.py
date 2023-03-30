@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-x = np.linspace(400,520,121)#设置画图范围
+x = np.linspace(450,500,50)#设置画图范围
 
 quantity1 = 2
-quantity2 = 2
+quantity2 = 0
 
-sigma1 = 6  #方差设置为2
-u1 = 440 #均值设置为1
+sigma1 = 4  #方差设置为2
+u1 = 475 #均值设置为1
 y1 = (1 / (math.sqrt(2*math.pi) /sigma1)) * np.exp(-(x - u1) ** 2 / (2 * (sigma1 ** 2)))
 
 

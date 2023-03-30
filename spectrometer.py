@@ -14,9 +14,16 @@ class Spectrometer:
         self.wavelength = wavelength
         self.alm = ['Original']
 
-    def _get_matrix_a(self, filepath):
+    def _get_matrix_a(self, filepath,method):
         self.matrix_a = self.__get_spectral_intensity(filepath)
-        # self.matrix_a = self.__absorption2transmittance(self.matrix_a)
+        if method == 1:
+            matrixatemp = self.matrix_a[:, 0]
+            for umtrix_a_temp in np.arange(3,121,3):
+                matrixatemp = np.vstack((self.matrix_a[:, umtrix_a_temp], matrixatemp))
+            # self.matrix_a = self.__absorption2transmittance(self.matrix_a)
+            self.matrix_a = matrixatemp.T
+        else:
+            self.matrix_a = self.matrix_a[:,50:100]
         return self.matrix_a
 
     def _get_matrix_x(self, filepath,method,name):
